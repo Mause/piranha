@@ -106,7 +106,7 @@ fn execute_piranha_and_check_result(
   ignore_whitespace: bool,
 ) {
   let path_to_codebase = Path::new(piranha_arguments.paths_to_codebase().first().unwrap());
-  let output_summaries = execute_piranha(piranha_arguments);
+  let output_summaries = execute_piranha(piranha_arguments).unwrap();
   assert_eq!(output_summaries.len(), files_changed);
 
   let mut all_files_match = true;
@@ -189,7 +189,7 @@ macro_rules! create_match_tests {
           .$kw($value)
         )*
       .build();
-      let output_summaries = $crate::execute_piranha(&piranha_arguments);
+      let output_summaries = $crate::execute_piranha(&piranha_arguments).unwrap();
       super::assert_frequency_for_matches(&output_summaries, &$matches_frequency);
     }
   )*

@@ -51,7 +51,7 @@ fn test_simple_rename_code_snippet() {
     .build();
 
   let expected = "(method_declaration name: (_) @method_name) @md";
-  let output_summaries = execute_piranha(&piranha_arguments);
+  let output_summaries = execute_piranha(&piranha_arguments).unwrap();
   assert!(output_summaries.len() == 1);
   assert!(eq_without_whitespace(
     output_summaries[0].content(),

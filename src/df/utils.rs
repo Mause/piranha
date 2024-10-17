@@ -96,7 +96,7 @@ pub fn get_capture_groups_from_tsq(pattern: String) -> Vec<String> {
     .should_validate(false)
     .build();
 
-  let output_summaries = execute_piranha(&piranha_arguments);
+  let output_summaries = execute_piranha(&piranha_arguments).unwrap();
 
   // maps matched strings to a vec of strings
   let capture_groups = output_summaries
@@ -143,7 +143,7 @@ pub fn get_capture_group_usage_from_tsq(pattern: String) -> Vec<String> {
     .should_validate(false)
     .build();
 
-  let output_summaries = execute_piranha(&piranha_arguments);
+  let output_summaries = execute_piranha(&piranha_arguments).unwrap();
 
   // maps matched strings to a vec of strings
   let matched_strings = output_summaries

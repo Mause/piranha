@@ -36,7 +36,7 @@ fn main() {
   let args = PiranhaArguments::from_cli();
 
   debug!("Piranha Arguments are \n{:#?}", args);
-  let piranha_output_summaries = execute_piranha(&args);
+  let piranha_output_summaries = execute_piranha(&args).unwrap();
 
   if let Some(path) = args.path_to_output_summary() {
     write_output_summary(piranha_output_summaries, path);

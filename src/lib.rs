@@ -16,6 +16,7 @@ use models::{
   piranha_arguments::PiranhaArguments, piranha_output::PiranhaOutputSummary, rule::Rule,
   rule_graph::RuleGraph, source_code_unit::SourceCodeUnit,
 };
+use tree_sitter::QueryError;
 
 #[macro_use]
 extern crate lazy_static;
@@ -36,8 +37,10 @@ use crate::models::rule_store::RuleStore;
 use pyo3::prelude::{pyfunction, pymodule, wrap_pyfunction, PyModule, PyResult, Python};
 use tempdir::TempDir;
 
+pyo3::create_exception!(module, MyError, pyo3::exceptions::PyException);
+
 #[pymodule]
-fn polyglot_piranha(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
+fn polyglot_piranha(py: Python<'_>, m: &PyModule) -> PyResult<()> {
   pyo3_log::init();
   m.add_function(wrap_pyfunction!(execute_piranha, m)?)?;
   m.add_class::<PiranhaArguments>()?;
@@ -48,6 +51,7 @@ fn polyglot_piranha(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
   m.add_class::<Rule>()?;
   m.add_class::<OutgoingEdges>()?;
   m.add_class::<Filter>()?;
+  m.add("MyError", py.get_type::<MyError>())?;
   Ok(())
 }
 
@@ -59,17 +63,26 @@ fn polyglot_piranha(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
 /// Returns Piranha Output Summary for each file touched or analyzed by Piranha.
 /// For each file, it reports its content after the rewrite, the list of matches and the list of rewrites.
 #[pyfunction]
-pub fn execute_piranha(piranha_arguments: &PiranhaArguments) -> Vec<PiranhaOutputSummary> {
-  let mut piranha = Piranha::new(piranha_arguments);
-  piranha.perform_cleanup();
-
-  let summaries = piranha
-    .get_updated_files()
-    .iter()
-    .map(PiranhaOutputSummary::new)
-    .collect_vec();
-  log_piranha_output_summaries(&summaries);
-  summaries
+pub fn execute_piranha(
+  piranha_arguments: &PiranhaArguments,
+) -> PyResult<Vec<PiranhaOutputSummary>> {
+  match std::panic::catch_unwind(|| {
+    let mut piranha = Piranha::new(piranha_arguments);
+    piranha.perform_cleanup();
+    let summaries = piranha
+      .get_updated_files()
+      .iter()
+      .map(PiranhaOutputSummary::new)
+      .collect_vec();
+    log_piranha_output_summaries(&summaries);
+    Ok(summaries)
+  }) {
+    Ok(summaries) => summaries,
+    Err(e) => Err(match e.downcast::<QueryError>() {
+      Ok(ok) => MyError::new_err(ok.to_string()),
+      Err(_) => panic!("unexpected panic"),
+    }),
+  }
 }
 
 fn log_piranha_output_summaries(summaries: &Vec<PiranhaOutputSummary>) {
