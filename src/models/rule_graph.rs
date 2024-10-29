@@ -129,9 +129,7 @@ impl RuleGraphBuilder {
       .create()
       .unwrap();
 
-    if let Err(err) = graph.validate() {
-      return Err(err);
-    }
+    graph.validate()?;
 
     Ok(graph)
   }
