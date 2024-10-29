@@ -186,7 +186,7 @@ fn test_new_line_character_used_in_string_literal_code_snippet() {
       assert (\"Hello \\n World\".equals(s));
     }
   }";
-  let output_summaries = execute_piranha(&piranha_arguments).unwrap();
+  let output_summaries = execute_piranha(&piranha_arguments);
   assert!(output_summaries.len() == 1);
   assert!(eq_without_whitespace(
     output_summaries[0].content(),
@@ -437,7 +437,7 @@ fn test_dyn_rule() {
     .allow_dirty_ast(true)
     .build();
 
-  let output_summaries = execute_piranha(&piranha_arguments).unwrap();
+  let output_summaries = execute_piranha(&piranha_arguments);
   // assert
   assert_eq!(output_summaries.len(), 1);
 }
@@ -459,7 +459,7 @@ fn test_multiple_code_bases() {
     .paths_to_codebase(vec![path_to_codebase1, path_to_codebase2])
     .rule_graph(RuleGraphBuilder::default().rules(vec![rule]).build())
     .build();
-  let output_summaries = execute_piranha(&piranha_arguments).unwrap();
+  let output_summaries = execute_piranha(&piranha_arguments);
   // Note that we expect 2 matches because we have 2 code bases, and each code base has 1 match.
   // We also have another codebase `folder_3` but the `paths_to_codebase` does not include it.
   assert_eq!(output_summaries.len(), 2);

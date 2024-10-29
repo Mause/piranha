@@ -15,7 +15,6 @@ use crate::{
   df::analysis::DataflowAnalysis,
   models::{outgoing_edges::OutgoingEdges, rule::Rule},
   utilities::{read_toml, MapOfVec},
-  MyError,
 };
 
 use derive_builder::Builder;
@@ -69,10 +68,15 @@ impl Validator for RuleGraph {
   }
 }
 
+#[cfg(feature = "extension-module")]
+use pyo3::prelude::PyResult;
+
 #[pymethods]
 impl RuleGraph {
+  #[cfg(feature = "extension-module")]
   #[new]
-  fn py_new(rules: Vec<Rule>, edges: Vec<OutgoingEdges>) -> pyo3::PyResult<Self> {
+  fn py_new(rules: Vec<Rule>, edges: Vec<OutgoingEdges>) -> PyResult<Self> {
+    use crate::MyError;
     match RuleGraphBuilder::default()
       .rules(rules)
       .edges(edges)
