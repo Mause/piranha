@@ -17,7 +17,6 @@ use crate::{
   utilities::{read_toml, MapOfVec},
 };
 
-use colored::Colorize;
 use derive_builder::Builder;
 use getset::{Getters, MutGetters};
 use itertools::Itertools;
@@ -69,14 +68,23 @@ impl Validator for RuleGraph {
   }
 }
 
+#[cfg(feature = "extension-module")]
+use pyo3::prelude::PyResult;
+
 #[pymethods]
 impl RuleGraph {
+  #[cfg(feature = "extension-module")]
   #[new]
-  fn py_new(rules: Vec<Rule>, edges: Vec<OutgoingEdges>) -> Self {
-    RuleGraphBuilder::default()
+  fn py_new(rules: Vec<Rule>, edges: Vec<OutgoingEdges>) -> PyResult<Self> {
+    use crate::MyError;
+    match RuleGraphBuilder::default()
       .rules(rules)
       .edges(edges)
-      .build()
+      .build_safe()
+    {
+      Ok(rule_graph) => Ok(rule_graph),
+      Err(err) => Err(MyError::new_err(err)),
+    }
   }
 
   fn __repr__(&self) -> String {
@@ -91,6 +99,10 @@ impl RuleGraph {
 impl RuleGraphBuilder {
   /// Build the rule graph.
   pub fn build(&self) -> RuleGraph {
+    self.build_safe().unwrap()
+  }
+
+  pub fn build_safe(&self) -> Result<RuleGraph, String> {
     let _rule_graph = self.create().unwrap();
 
     let mut graph = HashMap::new();
@@ -121,11 +133,9 @@ impl RuleGraphBuilder {
       .create()
       .unwrap();
 
-    if let Err(err) = graph.validate() {
-      panic!("{}", err.as_str().red());
-    }
+    graph.validate()?;
 
-    graph
+    Ok(graph)
   }
 
   // We need access to the initial set of substitutions to validate the rule graph
